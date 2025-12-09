@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -7,6 +8,7 @@
   <link rel="stylesheet" href="request_styles.css">
   <script src="request_script.js" defer></script>
 </head>
+
 <body>
   <div class="container">
     <h2>Submit a Request</h2>
@@ -14,31 +16,71 @@
     <div class="success-msg" id="successMessage">Your request has been submitted successfully!</div>
 
     <form id="requestForm" novalidate>
+
       <label class="required">Name</label>
-      <input type="text" id="name" />
+      <input type="text" id="name" placeholder="Capital letters only" />
       <div class="error-msg" id="nameError">This field is required.</div>
 
       <label class="required">Surname</label>
-      <input type="text" id="surname" />
+      <input type="text" id="surname" placeholder="Capital letters only" />
       <div class="error-msg" id="surnameError">This field is required.</div>
 
-      <label class="required">Phone Number</label>
-      <input type="text" id="phone" />
+
+      <label class="required">PESEL</label>
+      <input type="text" id="pesel" />
+      <div class="error-msg" id="peselError">This field is required.</div>
+
+      <label class="optional">Phone Number</label>
+      <input type="text" id="phone" placeholder="Polish phone number (country code +48 optional)" />
       <div class="error-msg" id="phoneError">Please enter a valid phone number.</div>
 
       <label class="optional">Email</label>
       <input type="email" id="email" />
       <div class="error-msg" id="emailError">Please enter a valid email address.</div>
 
-      <label class="required">Request Type</label>
-      <select id="requestType">
-        <option value="">Select a type...</option>
-        <option>General Inquiry</option>
-        <option>ID</option>
-        <option>Passport</option>
-        <option>Temporary residence permit</option>
-      </select>
-      <div class="error-msg" id="typeError">Please select a request type.</div>
+      <!-- ============================= -->
+      <!-- REQUEST TYPE (GROUP BOX)    -->
+      <!-- ============================= -->
+      <fieldset class="group">
+        <legend class="required">Request Type</legend>
+
+        <label>
+          <input type="radio" name="requestType" value="general">
+          General Inquiry
+        </label>
+
+        <label>
+          <input type="radio" name="requestType" value="id">
+          ID
+        </label>
+
+        <label>
+          <input type="radio" name="requestType" value="passport">
+          Passport
+        </label>
+
+        <label>
+          <input type="radio" name="requestType" value="trp">
+          Temporary Residence Permit
+        </label>
+
+        <div class="error-msg" id="typeError">Please choose a request type.</div>
+      </fieldset>
+
+
+      <!-- ============================= -->
+      <!-- SUBCATEGORY GROUP BOX       -->
+      <!-- (Hidden until parent chosen)-->
+      <!-- ============================= -->
+      <fieldset class="group" id="subGroup" style="display:none;">
+        <legend class="required" id="subLegend">Subcategory</legend>
+
+        <div id="subOptions"></div>
+
+        <div class="error-msg" id="subError">Please choose a subcategory.</div>
+      </fieldset>
+
+
 
       <label>Request Description (optional)</label>
       <textarea id="description" placeholder="Enter additional details..."></textarea>
@@ -49,4 +91,5 @@
 
   <script src="request_submission_script.js" defer></script>
 </body>
+
 </html>
