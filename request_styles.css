@@ -1,0 +1,93 @@
+/* Styles for Request Submission UI */
+body {
+  font-family: Arial, sans-serif;
+  background: #f5f5f5;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 40px;
+}
+
+.container {
+  background: #fff;
+  width: 90%;
+  max-width: 500px;
+  padding: 20px 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+label {
+  display: block;
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+.required::after {
+  content: " *";
+  color: red;
+}
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.error-msg {
+  color: red;
+  font-size: 12px;
+  margin-top: 3px;
+  display: none;
+}
+
+.success-msg {
+  margin-top: 20px;
+  padding: 12px;
+  background: #e6ffe6;
+  border: 1px solid #3cb371;
+  color: #256f3a;
+  border-radius: 6px;
+  display: none;
+  text-align: center;
+}
+
+button {
+  width: 100%;
+  padding: 12px;
+  background: #005fcc;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0047a1;
+}
+
+@media (max-width: 480px) {
+  body {
+    padding-top: 20px;
+  }
+  .container {
+    padding: 15px 20px;
+  }
+}

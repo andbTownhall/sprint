@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Request Submission UI</title>
+  <link rel="stylesheet" href="request_styles.css">
+  <script src="request_script.js" defer></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Submit a Request</h2>
+
+    <div class="success-msg" id="successMessage">Your request has been submitted successfully!</div>
+
+    <form id="requestForm" novalidate>
+      <label class="required">Name</label>
+      <input type="text" id="name" />
+      <div class="error-msg" id="nameError">This field is required.</div>
+
+      <label class="required">Surname</label>
+      <input type="text" id="surname" />
+      <div class="error-msg" id="surnameError">This field is required.</div>
+
+      <label class="required">Phone Number</label>
+      <input type="text" id="phone" />
+      <div class="error-msg" id="phoneError">Please enter a valid phone number.</div>
+
+      <label class="optional">Email</label>
+      <input type="email" id="email" />
+      <div class="error-msg" id="emailError">Please enter a valid email address.</div>
+
+      <label class="required">Request Type</label>
+      <select id="requestType">
+        <option value="">Select a type...</option>
+        <option>General Inquiry</option>
+        <option>ID</option>
+        <option>Passport</option>
+        <option>Temporary residence permit</option>
+      </select>
+      <div class="error-msg" id="typeError">Please select a request type.</div>
+
+      <label>Request Description (optional)</label>
+      <textarea id="description" placeholder="Enter additional details..."></textarea>
+
+      <button type="submit">Submit</button>
+    </form>
+  </div>
+
+  <script src="request_submission_script.js" defer></script>
+</body>
+</html>
