@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Request Submission UI</title>
-  <link rel="stylesheet" href="request_styles.css">
-  <script src="request_script.js" defer></script>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
 </head>
 
 <body>
@@ -20,6 +20,10 @@
       <label class="required">Name</label>
       <input type="text" id="name" placeholder="Capital letters only" />
       <div class="error-msg" id="nameError">This field is required.</div>
+
+      <label class="optional">Middle Name</label>
+      <input type="text" id="middleName" placeholder="Capital letters only" />
+      <div class="error-msg" id="middleNameError">Please enter a valid middle name.</div>
 
       <label class="required">Surname</label>
       <input type="text" id="surname" placeholder="Capital letters only" />
@@ -89,7 +93,6 @@
     </form>
   </div>
 
-  <script src="request_submission_script.js" defer></script>
 </body>
 
 </html>

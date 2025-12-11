@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Account Registration</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Account Registration</h2>
+
+    <div class="success-msg" id="successMessage">Your account has been registered successfully!</div>
+
+    <form id="registrationForm" novalidate>
+
+      <label class="required">Name</label>
+      <input type="text" id="name" placeholder="Capital letters only" />
+      <div class="error-msg" id="nameError">This field is required.</div>
+
+      <label class="optional">Middle Name</label>
+      <input type="text" id="middleName" placeholder="Capital letters only" />
+      <div class="error-msg" id="middleNameError">Please enter a valid middle name.</div>
+
+      <label class="required">Surname</label>
+      <input type="text" id="surname" placeholder="Capital letters only" />
+      <div class="error-msg" id="surnameError">This field is required.</div>
+
+      <label class="required">PESEL</label>
+      <input type="text" id="pesel" />
+      <div class="error-msg" id="peselError">This field is required.</div>
+
+      <label class="optional">Phone Number</label>
+      <input type="text" id="phone" placeholder="Polish phone number (country code +48 optional)" />
+      <div class="error-msg" id="phoneError">Please enter a valid phone number.</div>
+
+      <label class="required">Email</label>
+      <input type="email" id="email" />
+      <div class="error-msg" id="emailError">This field is required.</div>
+
+      <label class="required">Password</label>
+      <input type="password" id="password" />
+      <div class="error-msg" id="passwordError">This field is required.</div>
+
+      <label class="required">Confirm Password</label>
+      <input type="password" id="confirmPassword" />
+      <div class="error-msg" id="confirmPasswordError">This field is required.</div>
+
+      <button type="create">Create Account</button>
+    </form>
+  </div>
+
+</body>
+
+</html>
