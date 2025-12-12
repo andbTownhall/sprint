@@ -10,19 +10,19 @@ app.use(bodyParser.json());
 
 // SQL Server Configuration
 const dbConfig = {
-    user: 'sa',                // The user you enabled
-    password: 'twnhwariacik', // <--- PUT YOUR NEW PASSWORD HERE
-    server: 'localhost\\SQLEXPRESS',       // Or 'localhost\\SQLEXPRESS' if that was your server name
+    user: 'townhall_admin',
+    password: 'SecureHasuo77@',
+    server: 'townhall-server-s198229.database.windows.net',
     database: 'townhall_db',
     options: {
         encrypt: true, 
-        trustServerCertificate: true // Required for local connections
+        trustServerCertificate: false // FALSE is better for Azure (more secure)
     }
 };
 
 // Test Connection on Startup
 sql.connect(dbConfig).then(pool => {
-    if (pool.connected) console.log('Connected to SQL Server successfully');
+    if (pool.connected) console.log('Connected to SQL Server successfully - AZURE');
 }).catch(err => console.error('Database Connection Failed:', err));
 
 // Registration Endpoint
