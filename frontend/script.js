@@ -317,7 +317,7 @@ if (registrationForm) {
             };
 
             // 2. Send to Server
-            fetch('https://townhall-backend-jbj3.onrender.com', {
+            fetch('https://townhall-backend-jbj3.onrender.com/register', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
