@@ -10,10 +10,24 @@
 </head>
 
 <body>
+  <div class="top-container">
+    <header class="main-header">
+      <h1>Townhall Online System</h1>
+      <p>Your portal for submitting requests and managing your account</p>
+    </header>
+
+    <nav class="navbar">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="request_form.html">Request Form</a></li>
+        <li><a class="active" href="signup.html">Account Registration</a></li>
+      </ul>
+    </nav>
+  </div>
   <div class="container">
     <h2>Account Registration</h2>
 
-    <div class="success-msg" id="successMessage">Your account has been registered successfully!</div>
+    <div class="success-msg" id="registerSuccess">Your account has been registered successfully!</div>
 
     <form id="registrationForm" novalidate>
 
@@ -49,10 +63,12 @@
       <input type="password" id="confirmPassword" />
       <div class="error-msg" id="confirmPasswordError">This field is required.</div>
 
-      <button type="create">Create Account</button>
+      <button type="submit">Create Account</button>
     </form>
   </div>
-
+  <footer class="footer">
+    © 2025 Townhall Project – Data Engineering
+  </footer>
 </body>
 
 </html>

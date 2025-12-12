@@ -10,37 +10,59 @@
 </head>
 
 <body>
+  <div class="top-container">
+    <header class="main-header">
+      <h1>Townhall Online System</h1>
+      <p>Your portal for submitting requests and managing your account</p>
+    </header>
+
+    <nav class="navbar">
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a class="active" href="request_form.html">Request Form</a></li>
+        <li><a href="signup.html">Account Registration</a></li>
+      </ul>
+    </nav>
+  </div>
+
   <div class="container">
     <h2>Submit a Request</h2>
 
-    <div class="success-msg" id="successMessage">Your request has been submitted successfully!</div>
+    <div class="success-msg" id="submitSuccess">
+      <div style="font-size: 18px; margin-bottom: 10px;">✓ Request Submitted Successfully!</div>
+      <div style="margin: 10px 0;">
+        <strong>Request ID:</strong> <span id="requestId" style="font-size: 16px; color: #005fcc;"></span>
+      </div>
+      <div style="font-size: 13px; margin-top: 10px; opacity: 0.9;">
+        A confirmation has been sent to your registered email/phone number.
+      </div>
+    </div>
 
     <form id="requestForm" novalidate>
 
       <label class="required">Name</label>
-      <input type="text" id="name" placeholder="Capital letters only" />
-      <div class="error-msg" id="nameError">This field is required.</div>
+      <input type="text" id="name" placeholder="Capital letters only" aria-describedby="nameError" />
+      <div class="error-msg" id="nameError" role="alert">This field is required.</div>
 
       <label class="optional">Middle Name</label>
-      <input type="text" id="middleName" placeholder="Capital letters only" />
-      <div class="error-msg" id="middleNameError">Please enter a valid middle name.</div>
+      <input type="text" id="middleName" placeholder="Capital letters only" aria-describedby="middleNameError" />
+      <div class="error-msg" id="middleNameError" role="alert">Please enter a valid middle name.</div>
 
       <label class="required">Surname</label>
-      <input type="text" id="surname" placeholder="Capital letters only" />
-      <div class="error-msg" id="surnameError">This field is required.</div>
-
+      <input type="text" id="surname" placeholder="Capital letters only" aria-describedby="surnameError" />
+      <div class="error-msg" id="surnameError" role="alert">This field is required.</div>
 
       <label class="required">PESEL</label>
-      <input type="text" id="pesel" />
-      <div class="error-msg" id="peselError">This field is required.</div>
+      <input type="text" id="pesel" aria-describedby="peselError" />
+      <div class="error-msg" id="peselError" role="alert">This field is required.</div>
 
       <label class="optional">Phone Number</label>
-      <input type="text" id="phone" placeholder="Polish phone number (country code +48 optional)" />
-      <div class="error-msg" id="phoneError">Please enter a valid phone number.</div>
+      <input type="text" id="phone" placeholder="Polish phone number (country code +48 optional)" aria-describedby="phoneError" />
+      <div class="error-msg" id="phoneError" role="alert">Please enter a valid phone number.</div>
 
-      <label class="optional">Email</label>
-      <input type="email" id="email" />
-      <div class="error-msg" id="emailError">Please enter a valid email address.</div>
+      <label class="required">Email</label>
+      <input type="email" id="email" aria-describedby="emailError" />
+      <div class="error-msg" id="emailError" role="alert">Please enter a valid email address.</div>
 
       <!-- ============================= -->
       <!-- REQUEST TYPE (GROUP BOX)    -->
@@ -68,9 +90,8 @@
           Temporary Residence Permit
         </label>
 
-        <div class="error-msg" id="typeError">Please choose a request type.</div>
+        <div class="error-msg" id="typeError" role="alert">Please choose a request type.</div>
       </fieldset>
-
 
       <!-- ============================= -->
       <!-- SUBCATEGORY GROUP BOX       -->
@@ -81,10 +102,8 @@
 
         <div id="subOptions"></div>
 
-        <div class="error-msg" id="subError">Please choose a subcategory.</div>
+        <div class="error-msg" id="subError" role="alert">Please choose a subcategory.</div>
       </fieldset>
-
-
 
       <label>Request Description (optional)</label>
       <textarea id="description" placeholder="Enter additional details..."></textarea>
@@ -92,6 +111,10 @@
       <button type="submit">Submit</button>
     </form>
   </div>
+
+  <footer class="footer">
+    © 2025 Townhall Project – Data Engineering
+  </footer>
 
 </body>
 
