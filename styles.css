@@ -132,7 +132,7 @@ body {
   padding: 30px 25px;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  margin: 180px auto 100px auto;
+  margin: 210px auto 100px auto;
 }
 
 .container h2 {
@@ -140,6 +140,12 @@ body {
   margin-bottom: 20px;
   text-align: center;
   color: #005fcc;
+}
+
+#forgotPasswordLink {
+  display: block;
+  text-align: center;
+  margin-top: 10px;
 }
 
 /* ==============================

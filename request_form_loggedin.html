@@ -18,10 +18,10 @@
 
     <nav class="navbar">
       <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="login.html">Login</a></li>
+        <li><a href="index_loggedin.html">Home</a></li>
         <li><a class="active" href="request_form.html">Request Form</a></li>
-        <li><a href="signup.html">Account Registration</a></li>
+        <li><a href="reset_password.html">Reset Password</a></li> 
+        <li><a id="logoutNav" href="#">Log Out</a></li> 
       </ul>
     </nav>
   </div>
@@ -116,6 +116,17 @@
   <footer class="footer">
     © 2025 Townhall Project – Data Engineering
   </footer>
+  <script>
+        // Get the logged-in user and update welcome message
+        const user = localStorage.getItem("loggedInUser");
+
+        // Logout
+        document.getElementById("logoutNav").addEventListener("click", (e) => {
+            e.preventDefault();
+            localStorage.removeItem("loggedInUser");
+            window.location.href = "index.html"; // back to original index
+        });
+    </script>
 
 </body>
 

@@ -303,17 +303,162 @@ if (registrationForm) {
         } else {
             hideError("confirmPasswordError");
         }
+        
+        if (valid) {
+            // 1. Prepare the data
+            const formData = {
+                name: document.getElementById("name").value.trim(),
+                middleName: document.getElementById("middleName").value.trim(),
+                surname: document.getElementById("surname").value.trim(),
+                pesel: document.getElementById("pesel").value.trim(),
+                phone: document.getElementById("phone").value.trim(),
+                email: document.getElementById("email").value.trim(),
+                password: document.getElementById("password").value.trim()
+            };
+
+            // 2. Send to Server
+            fetch('https://townhall-backend-jbj3.onrender.com/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'User registered successfully!') {
+                    // SHOW SUCCESS ONLY IF SERVER SAYS YES
+                    const successMsg = document.getElementById("registerSuccess");
+                    successMsg.style.display = "block";
+                    successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+                    setTimeout(() => {
+                        document.getElementById("registrationForm").reset(); // Reset form
+                        successMsg.style.display = "none";
+                    }, 5000);
+                } else {
+                    // Show server error (e.g., "Email already exists")
+                    alert("Registration failed: " + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Could not connect to the backend server.");
+            });
+    }
+    });
+}
+
+// ===============================
+// LOGIN FORM VALIDATION
+// ===============================
+const loginForm = document.getElementById("login");
+
+if (loginForm) {
+    loginForm.addEventListener("submit", function(e) {
+        e.preventDefault(); // prevent default submission
+        let valid = true;
+
+        const userId = document.getElementById("userId").value.trim();
+        if (!userId) {
+            showError("userIdError", "This field is required.");
+            valid = false;
+        } else {
+            hideError("userIdError");
+        }
+
+        const password = document.getElementById("password").value.trim();
+        if (!password) {
+            showError("passwordError", "This field is required.");
+            valid = false;
+        } else {
+            hideError("passwordError");
+        }
 
         if (valid) {
-            const successMsg = document.getElementById("registerSuccess");
+            localStorage.setItem("loggedInUser", userId);
+            window.location.href = "index_loggedin.html";
+        }
+    });
+}
+
+// ===============================
+// FORGOT PASSWORD FORM VALIDATION
+// ===============================
+const forgotForm = document.getElementById("forgot_password");
+
+if (forgotForm) {
+    forgotForm.addEventListener("submit", function(e) {
+        e.preventDefault(); 
+        let valid = true;
+
+        const emailInput = document.getElementById("email").value.trim();
+
+        if (!validateEmailField("email", "emailError", true)) valid = false;
+
+        if (valid) {
+            const successMsg = document.getElementById("forgotSuccess");
+            const emailSpan = document.getElementById("forgotEmail");
+            emailSpan.textContent = emailInput; 
             successMsg.style.display = "block";
-            
-            // Scroll to success message
-            successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Reset form and hide success message after 10 seconds
+        }
+    });
+}
+
+// ===============================
+// RESET PASSWORD FORM VALIDATION
+// ===============================
+const resetForm = document.getElementById("reset_password");
+
+if (resetForm) {
+    resetForm.addEventListener("submit", function(e) {
+        e.preventDefault(); 
+        let valid = true;
+
+        const emailInput = document.getElementById("email").value.trim();
+        const passwordInput = document.getElementById("password").value.trim();
+        const confirmPasswordInput = document.getElementById("Confpassword").value.trim();
+
+        // Validate Email
+        if (!validateEmailField("email", "emailError", true)) valid = false;
+
+        // Validate Password
+        if (!passwordInput) {
+            showError("passwordError", "This field is required.");
+            valid = false;
+        } else {
+            // Check password strength
+            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+            if (!passwordPattern.test(passwordInput)) {
+                showError(
+                    "passwordError",
+                    "Password must be 8+ chars, include upper/lowercase, a digit and a symbol."
+                );
+                valid = false;
+            } else {
+                hideError("passwordError");
+            }
+        }
+
+        // Validate Confirm Password
+        if (!confirmPasswordInput) {
+            showError("ConfpasswordError", "This field is required.");
+            valid = false;
+        } else if (passwordInput !== confirmPasswordInput) {
+            showError("ConfpasswordError", "Passwords do not match.");
+            valid = false;
+        } else {
+            hideError("ConfpasswordError");
+        }
+
+        // If everything is valid
+        if (valid) {
+            const successMsg = document.getElementById("resetSuccess");
+            successMsg.style.display = "block";
+
+            // Optionally hide after some time
             setTimeout(() => {
-                this.reset();
+                resetForm.reset();
                 successMsg.style.display = "none";
             }, 10000);
         }
