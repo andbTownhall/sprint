@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// SQL Server Configuration
+// SQL server config
 const dbConfig = {
     user: 'townhall_admin',
     password: 'SecureHasuo77@',
@@ -16,29 +16,27 @@ const dbConfig = {
     database: 'townhall_db',
     options: {
         encrypt: true, 
-        trustServerCertificate: false // FALSE is better for Azure (more secure)
+        trustServerCertificate: false
     }
 };
 
-// Test Connection on Startup
+//test
 sql.connect(dbConfig).then(pool => {
     if (pool.connected) console.log('Connected to SQL Server successfully - AZURE');
 }).catch(err => console.error('Database Connection Failed:', err));
 
-// ==========================================
-// 1. SMART REGISTRATION (Handle Guests)
-// ==========================================
+//Guests
 app.post('/register', async (req, res) => {
     const { name, middleName, surname, pesel, phone, email, password } = req.body;
 
     try {
         const pool = await sql.connect(dbConfig);
         
-        // Encrypt Password
+        //encrypt psswd
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // Check if user exists (Guest or Real)
+        // Check if user exists (guest or real)
         const checkUser = await pool.request()
             .input('email', sql.NVarChar, email)
             .input('pesel', sql.NVarChar, pesel)
@@ -47,7 +45,7 @@ app.post('/register', async (req, res) => {
         if (checkUser.recordset.length > 0) {
             const user = checkUser.recordset[0];
 
-            // SCENARIO A: User exists but is a GUEST (No password) -> UPGRADE THEM
+            //User exists but is a GUEST (No password) -> update entry in db
             if (user.password_hash === null) {
                 await pool.request()
                     .input('id', sql.Int, user.id)
@@ -64,11 +62,11 @@ app.post('/register', async (req, res) => {
                 return res.status(200).json({ message: 'Account registered successfully! (Guest account upgraded)' });
             } 
             
-            // SCENARIO B: User exists and has a password -> ERROR
+            //already exists
             return res.status(409).json({ message: 'User already exists!' });
         }
 
-        // SCENARIO C: New User -> INSERT
+        //new user
         await pool.request()
             .input('first', sql.NVarChar, name)
             .input('middle', sql.NVarChar, middleName)
@@ -90,28 +88,27 @@ app.post('/register', async (req, res) => {
     }
 });
 
-// ==========================================
-// 2. GUEST REQUEST SUBMISSION
-// ==========================================
+
+//guesst req
 app.post('/submit-request', async (req, res) => {
-    // We receive EVERYTHING from the form
+
     const { name, middleName, surname, pesel, phone, email, requestType, subcategory, description } = req.body;
 
     try {
         const pool = await sql.connect(dbConfig);
         let userId;
 
-        // Step 1: Check if user exists
+        //check if exists
         const userCheck = await pool.request()
             .input('email', sql.NVarChar, email)
             .input('pesel', sql.NVarChar, pesel)
             .query('SELECT id FROM users WHERE email = @email OR pesel = @pesel');
 
         if (userCheck.recordset.length > 0) {
-            // User exists (Guest or Registered) -> Use their ID
+            //yes
             userId = userCheck.recordset[0].id;
         } else {
-            // User does NOT exist -> Create "Guest" (Password is NULL)
+
             const newUser = await pool.request()
                 .input('first', sql.NVarChar, name)
                 .input('middle', sql.NVarChar, middleName)
@@ -127,7 +124,6 @@ app.post('/submit-request', async (req, res) => {
             userId = newUser.recordset[0].id;
         }
 
-        // Step 2: Create the Request linked to that User ID
         const result = await pool.request()
             .input('uid', sql.Int, userId)
             .input('type', sql.NVarChar, requestType)
@@ -151,23 +147,21 @@ app.post('/submit-request', async (req, res) => {
     }
 });
 
-// ==========================================
-// LOGIN ENDPOINT (Returns User Data)
-// ==========================================
+
 app.post('/login', async (req, res) => {
-    const { userId, password } = req.body; // userId is the Email
+    const { userId, password } = req.body;
 
     try {
         const pool = await sql.connect(dbConfig);
         
-        // 1. Find User by Email
+        //find by email
         const result = await pool.request()
             .input('email', sql.NVarChar, userId)
             .query('SELECT * FROM users WHERE email = @email');
 
         const user = result.recordset[0];
 
-        // 2. Validate User & Password
+        //validate psswd
         if (!user || !user.password_hash) {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
@@ -177,7 +171,7 @@ app.post('/login', async (req, res) => {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
 
-        // 3. Return User Data (Exclude sensitive hash)
+        //return data
         res.json({
             success: true,
             user: {
