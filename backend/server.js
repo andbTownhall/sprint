@@ -151,4 +151,49 @@ app.post('/submit-request', async (req, res) => {
     }
 });
 
+// ==========================================
+// LOGIN ENDPOINT (Returns User Data)
+// ==========================================
+app.post('/login', async (req, res) => {
+    const { userId, password } = req.body; // userId is the Email
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        
+        // 1. Find User by Email
+        const result = await pool.request()
+            .input('email', sql.NVarChar, userId)
+            .query('SELECT * FROM users WHERE email = @email');
+
+        const user = result.recordset[0];
+
+        // 2. Validate User & Password
+        if (!user || !user.password_hash) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+        }
+
+        const validPass = await bcrypt.compare(password, user.password_hash);
+        if (!validPass) {
+            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
+        }
+
+        // 3. Return User Data (Exclude sensitive hash)
+        res.json({
+            success: true,
+            user: {
+                first_name: user.first_name,
+                middle_name: user.middle_name,
+                last_name: user.last_name,
+                pesel: user.pesel,
+                phone_number: user.phone_number,
+                email: user.email
+            }
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 app.listen(3000, () => console.log('Server running on port 3000'));

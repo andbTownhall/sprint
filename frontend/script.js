@@ -156,6 +156,23 @@ if (subGroup && subOptions) {
 const requestForm = document.getElementById("requestForm");
 
 if (requestForm) {
+    const storedUser = localStorage.getItem("userProfile");
+    if (storedUser) {
+        const user = JSON.parse(storedUser);
+        
+        // Fill fields if they exist
+        if (document.getElementById("name")) document.getElementById("name").value = user.first_name || "";
+        if (document.getElementById("middleName")) document.getElementById("middleName").value = user.middle_name || "";
+        if (document.getElementById("surname")) document.getElementById("surname").value = user.last_name || "";
+        if (document.getElementById("pesel")) document.getElementById("pesel").value = user.pesel || "";
+        if (document.getElementById("phone")) document.getElementById("phone").value = user.phone_number || "";
+        if (document.getElementById("email")) document.getElementById("email").value = user.email || "";
+
+        // Optional: Make them read-only so they don't accidentally change it
+        // document.getElementById("email").readOnly = true;
+        // document.getElementById("pesel").readOnly = true;
+    }
+
     requestForm.addEventListener("submit", function (e) {
         e.preventDefault();
 
@@ -324,37 +341,41 @@ if (registrationForm) {
 }
 
 // ===============================
-// LOGIN FORM VALIDATION (RETAINED FROM NEW FILES)
+// LOGIN FORM (Now connects to Backend)
 // ===============================
 const loginForm = document.getElementById("login");
 
 if (loginForm) {
     loginForm.addEventListener("submit", function(e) {
         e.preventDefault();
-        let valid = true;
-
+        
         const userId = document.getElementById("userId").value.trim();
-        if (!userId) {
-            showError("userIdError", "This field is required.");
-            valid = false;
-        } else {
-            hideError("userIdError");
-        }
-
         const password = document.getElementById("password").value.trim();
-        if (!password) {
-            showError("passwordError", "This field is required.");
-            valid = false;
-        } else {
-            hideError("passwordError");
+
+        if (!userId || !password) {
+            showError("passwordError", "Please enter both email and password.");
+            return;
         }
 
-        // NOTE: This is client-side only and needs a backend fetch to verify login
-        if (valid) {
-            // Placeholder for successful login until backend logic is added
-            localStorage.setItem("loggedInUser", userId);
-            window.location.href = "index_loggedin.html";
-        }
+        // Fetch Login from Backend
+        fetch('https://townhall-backend-jbj3.onrender.com/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId, password })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                // SAVE USER DATA TO STORAGE
+                localStorage.setItem("userProfile", JSON.stringify(data.user));
+                localStorage.setItem("loggedInUser", data.user.first_name); // For welcome msg
+                
+                window.location.href = "index_loggedin.html";
+            } else {
+                showError("passwordError", data.message);
+            }
+        })
+        .catch(err => console.error(err));
     });
 }
 
