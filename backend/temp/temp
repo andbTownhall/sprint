@@ -57,3 +57,17 @@ server admin login:
 townhall_admin
 password:
 SecureHasuo77@
+
+
+
+updated: user table creation
+CREATE TABLE requests (
+    request_id INT IDENTITY(1,1) PRIMARY KEY,
+    user_id INT NOT NULL,
+    request_type NVARCHAR(50) NOT NULL,
+    subcategory NVARCHAR(100),
+    description NVARCHAR(MAX),
+    status NVARCHAR(20) DEFAULT 'Pending',
+    created_at DATETIME DEFAULT GETDATE(),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

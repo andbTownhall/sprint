@@ -63,4 +63,53 @@ app.post('/register', async (req, res) => {
     }
 });
 
+// Request Submission Endpoint
+app.post('/submit-request', async (req, res) => {
+    const { email, pesel, requestType, subcategory, description } = req.body;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        // 1. Verify User Exists
+        // We look for a user matching BOTH email and PESEL
+        const userCheck = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .input('pesel', sql.NVarChar, pesel)
+            .query('SELECT id FROM users WHERE email = @email AND pesel = @pesel');
+
+        if (userCheck.recordset.length === 0) {
+            return res.status(404).json({ 
+                success: false, 
+                message: 'User not found. Please register an account first, or check your Email/PESEL.' 
+            });
+        }
+
+        const userId = userCheck.recordset[0].id;
+
+        // 2. Insert Request
+        const result = await pool.request()
+            .input('uid', sql.Int, userId)
+            .input('type', sql.NVarChar, requestType)
+            .input('sub', sql.NVarChar, subcategory)
+            .input('desc', sql.NVarChar, description)
+            .query(`
+                INSERT INTO requests (user_id, request_type, subcategory, description)
+                OUTPUT INSERTED.request_id
+                VALUES (@uid, @type, @sub, @desc)
+            `);
+            
+        // 3. Return Success with the new ID
+        const newId = result.recordset[0].request_id;
+        res.status(201).json({ 
+            success: true, 
+            message: 'Request submitted!',
+            requestId: `REQ-${newId}` 
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
+
 app.listen(3000, () => console.log('Server running on port 3000'));

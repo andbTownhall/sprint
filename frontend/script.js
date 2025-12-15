@@ -168,7 +168,7 @@ if (subGroup && subOptions) {
 }
 
 // ===============================
-// REQUEST FORM VALIDATION
+// REQUEST FORM VALIDATION (UPDATED)
 // ===============================
 const requestForm = document.getElementById("requestForm");
 
@@ -178,25 +178,11 @@ if (requestForm) {
 
         let valid = true;
 
-        // Validate Name
-        if (!validateName("name", "nameError", "Name", true)) valid = false;
-
-        // Validate Middle Name (optional)
-        if (!validateName("middleName", "middleNameError", "Middle Name", false)) valid = false;
-
-        // Validate Surname
-        if (!validateName("surname", "surnameError", "Surname", true)) valid = false;
-
-        // Validate PESEL
+        // 1. Validate only Identity Fields
+        if (!validateEmailField("email", "emailError", true)) valid = false;
         if (!validatePESEL("pesel", "peselError")) valid = false;
 
-        // Validate Phone (optional)
-        if (!validatePhone("phone", "phoneError", false)) valid = false;
-
-        // Validate Email (required)
-        if (!validateEmailField("email", "emailError", true)) valid = false;
-
-        // REQUEST TYPE
+        // 2. Validate Request Details
         const selectedType = document.querySelector("input[name='requestType']:checked");
         if (!selectedType) {
             document.getElementById("typeError").style.display = "block";
@@ -205,7 +191,6 @@ if (requestForm) {
             document.getElementById("typeError").style.display = "none";
         }
 
-        // SUBTYPE
         const selectedSub = document.querySelector("input[name='subType']:checked");
         if (selectedType && !selectedSub) {
             document.getElementById("subError").style.display = "block";
@@ -215,33 +200,44 @@ if (requestForm) {
         }
 
         if (valid) {
-            // Generate unique request ID (format: REQ-YYYYMMDD-XXXXX)
-            const now = new Date();
-            const dateStr = now.getFullYear() + 
-                           String(now.getMonth() + 1).padStart(2, '0') + 
-                           String(now.getDate()).padStart(2, '0');
-            const randomNum = String(Math.floor(Math.random() * 99999) + 1).padStart(5, '0');
-            const requestId = `REQ-${dateStr}-${randomNum}`;
-            
-            // Display request ID
-            document.getElementById("requestId").textContent = requestId;
-            
-            const successMsg = document.getElementById("submitSuccess");
-            successMsg.style.display = "block";
-            
-            // Scroll to success message
-            successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            
-            // Reset form and hide success message after 10 seconds (longer to allow user to note the ID)
-            setTimeout(() => {
-                this.reset();
-                successMsg.style.display = "none";
-                
-                // Hide subcategory group
-                if (subGroup) {
-                    subGroup.style.display = "none";
+            // Prepare Data
+            const formData = {
+                email: document.getElementById("email").value.trim(),
+                pesel: document.getElementById("pesel").value.trim(),
+                requestType: selectedType.value,
+                subcategory: selectedSub.value,
+                description: document.getElementById("description").value.trim()
+            };
+
+            // Send to Backend
+            fetch('https://townhall-backend-jbj3.onrender.com/submit-request', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Success UI
+                    document.getElementById("requestId").textContent = data.requestId; // Use ID from server
+                    const successMsg = document.getElementById("submitSuccess");
+                    successMsg.style.display = "block";
+                    successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    setTimeout(() => {
+                        this.reset();
+                        successMsg.style.display = "none";
+                        if (subGroup) subGroup.style.display = "none";
+                    }, 10000);
+                } else {
+                    // Error UI (e.g., User not found)
+                    alert("Error: " + data.message);
                 }
-            }, 10000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert("Could not connect to server.");
+            });
         }
     });
 }

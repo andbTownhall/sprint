@@ -39,30 +39,16 @@
     </div>
 
     <form id="requestForm" novalidate>
-
-      <label class="required">Name</label>
-      <input type="text" id="name" placeholder="Capital letters only" aria-describedby="nameError" />
-      <div class="error-msg" id="nameError" role="alert">This field is required.</div>
-
-      <label class="optional">Middle Name</label>
-      <input type="text" id="middleName" placeholder="Capital letters only" aria-describedby="middleNameError" />
-      <div class="error-msg" id="middleNameError" role="alert">Please enter a valid middle name.</div>
-
-      <label class="required">Surname</label>
-      <input type="text" id="surname" placeholder="Capital letters only" aria-describedby="surnameError" />
-      <div class="error-msg" id="surnameError" role="alert">This field is required.</div>
+      
+      <label class="required">Email</label>
+      <input type="email" id="email" aria-describedby="emailError" placeholder="Enter your registered email" />
+       <div class="error-msg" id="emailError" role="alert">Please enter a valid email address.</div>
 
       <label class="required">PESEL</label>
-      <input type="text" id="pesel" aria-describedby="peselError" />
+      <input type="text" id="pesel" aria-describedby="peselError" placeholder="Enter your registered PESEL" />
       <div class="error-msg" id="peselError" role="alert">This field is required.</div>
 
-      <label class="optional">Phone Number</label>
-      <input type="text" id="phone" placeholder="Polish phone number (country code +48 optional)" aria-describedby="phoneError" />
-      <div class="error-msg" id="phoneError" role="alert">Please enter a valid phone number.</div>
-
-      <label class="required">Email</label>
-      <input type="email" id="email" aria-describedby="emailError" />
-      <div class="error-msg" id="emailError" role="alert">Please enter a valid email address.</div>
+      <hr style="margin: 20px 0; border: 0; border-top: 1px solid #ddd;">
 
       <!-- ============================= -->
       <!-- REQUEST TYPE (GROUP BOX)    -->
