@@ -1,5 +1,5 @@
 // ===============================
-// UTILITY AND VALIDATION FUNCTIONS (RETAINED)
+// UTILITY AND VALIDATION FUNCTIONS
 // ===============================
 function showError(id, msg) {
     const el = document.getElementById(id);
@@ -104,7 +104,7 @@ function validateEmailField(id, errorId, isRequired = true) {
 }
 
 // ===============================
-// SUBCATEGORY DEFINITIONS (RETAINED)
+// SUBCATEGORY DEFINITIONS
 // ===============================
 const subcategories = {
     general: ["Opening hours", "Fees", "Contact", "Other"],
@@ -118,7 +118,7 @@ const subOptions = document.getElementById("subOptions");
 const subLegend = document.getElementById("subLegend");
 
 // ===============================
-// Request Type → Subcategory Logic (RETAINED)
+// Request Type → Subcategory Logic
 // ===============================
 if (subGroup && subOptions) {
     document.querySelectorAll("input[name='requestType']").forEach(radio => {
@@ -151,7 +151,7 @@ if (subGroup && subOptions) {
 }
 
 // ===============================
-// GUEST REQUEST SUBMISSION (NEW LOGIC)
+// GUEST REQUEST SUBMISSION
 // ===============================
 const requestForm = document.getElementById("requestForm");
 
@@ -160,7 +160,7 @@ if (requestForm) {
     if (storedUser) {
         const user = JSON.parse(storedUser);
         
-        // Fill fields if they exist
+        //FILL IF EXISTS
         if (document.getElementById("name")) document.getElementById("name").value = user.first_name || "";
         if (document.getElementById("middleName")) document.getElementById("middleName").value = user.middle_name || "";
         if (document.getElementById("surname")) document.getElementById("surname").value = user.last_name || "";
@@ -168,9 +168,6 @@ if (requestForm) {
         if (document.getElementById("phone")) document.getElementById("phone").value = user.phone_number || "";
         if (document.getElementById("email")) document.getElementById("email").value = user.email || "";
 
-        // Optional: Make them read-only so they don't accidentally change it
-        // document.getElementById("email").readOnly = true;
-        // document.getElementById("pesel").readOnly = true;
     }
 
     requestForm.addEventListener("submit", function (e) {
@@ -178,7 +175,7 @@ if (requestForm) {
 
         let valid = true;
 
-        // Validate ALL fields (as required by the new Guest-First submission)
+        //validate
         if (!validateName("name", "nameError", "Name", true)) valid = false;
         if (!validateName("middleName", "middleNameError", "Middle Name", false)) valid = false;
         if (!validateName("surname", "surnameError", "Surname", true)) valid = false;
@@ -203,7 +200,7 @@ if (requestForm) {
         }
 
         if (valid) {
-            // Prepare Data (Send EVERYTHING)
+            //prepare data (Send EVERYTHING)
             const formData = {
                 name: document.getElementById("name").value.trim(),
                 middleName: document.getElementById("middleName").value.trim(),
@@ -216,7 +213,7 @@ if (requestForm) {
                 description: document.getElementById("description").value.trim()
             };
 
-            // Send to the SMART submit-request endpoint
+            //send to the endpoint (render)
             fetch('https://townhall-backend-jbj3.onrender.com/submit-request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -248,7 +245,7 @@ if (requestForm) {
 }
 
 // ===============================
-// REGISTRATION FORM VALIDATION (UPDATED WITH GUEST UPGRADE LOGIC)
+// REGISTRATION FORM VALIDATION (GUEST UPGRADE LOGIC)
 // ===============================
 const registrationForm = document.getElementById("registrationForm");
 
@@ -258,7 +255,7 @@ if (registrationForm) {
 
         let valid = true;
 
-        // Run ALL Client-Side Validations (RETAINED)
+        // Run aLL validations
         if (!validateName("name", "nameError", "Name", true)) valid = false;
         if (!validateName("middleName", "middleNameError", "Middle Name", false)) valid = false;
         if (!validateName("surname", "surnameError", "Surname", true)) valid = false;
@@ -266,7 +263,7 @@ if (registrationForm) {
         if (!validatePhone("phone", "phoneError", false)) valid = false;
         if (!validateEmailField("email", "emailError", true)) valid = false;
 
-        // PASSWORD VALIDATION (RETAINED)
+        // PASSWORD VALIDATION
         const password = document.getElementById("password").value.trim();
         const confirmPassword = document.getElementById("confirmPassword").value.trim();
         const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
