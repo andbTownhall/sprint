@@ -1,5 +1,5 @@
 // ===============================
-// UTILITY FUNCTIONS
+// UTILITY AND VALIDATION FUNCTIONS (RETAINED)
 // ===============================
 function showError(id, msg) {
     const el = document.getElementById(id);
@@ -16,42 +16,28 @@ function hideError(id) {
     }
 }
 
-// ===============================
-// VALIDATION FUNCTIONS
-// ===============================
 function isValidPolishPhone(phone) {
     if (!phone) return false;
-
     const s = phone.trim();
     const digits = s.replace(/\D/g, '');
-
-    // +48...
     if (s.startsWith('+')) {
         if (!digits.startsWith('48')) return false;
         return (digits.length - 2) === 9;
     }
-
-    // 48...
     if (digits.startsWith('48')) {
         return (digits.length - 2) === 9;
     }
-
-    // no country code
     return digits.length === 9;
 }
 
 function isValidPESEL(p) {
     if (!/^\d{11}$/.test(p)) return false;
-
     const weights = [1, 3, 7, 9, 1, 3, 7, 9, 1, 3];
     let sum = 0;
-
     for (let i = 0; i < 10; i++) {
         sum += parseInt(p[i]) * weights[i];
     }
-
     const control = (10 - (sum % 10)) % 10;
-
     return control === parseInt(p[10]);
 }
 
@@ -60,9 +46,6 @@ function isValidEmail(email) {
     return emailPattern.test(email);
 }
 
-// ===============================
-// REUSABLE VALIDATION FUNCTIONS
-// ===============================
 function validateName(id, errorId, fieldName, isRequired = true) {
     const value = document.getElementById(id).value.trim();
     const capitalPattern = /^[A-ZĄĆĘŁŃÓŚŻŹ]+$/;
@@ -121,7 +104,7 @@ function validateEmailField(id, errorId, isRequired = true) {
 }
 
 // ===============================
-// SUBCATEGORY DEFINITIONS
+// SUBCATEGORY DEFINITIONS (RETAINED)
 // ===============================
 const subcategories = {
     general: ["Opening hours", "Fees", "Contact", "Other"],
@@ -135,7 +118,7 @@ const subOptions = document.getElementById("subOptions");
 const subLegend = document.getElementById("subLegend");
 
 // ===============================
-// Request Type → Subcategory Logic
+// Request Type → Subcategory Logic (RETAINED)
 // ===============================
 if (subGroup && subOptions) {
     document.querySelectorAll("input[name='requestType']").forEach(radio => {
@@ -168,39 +151,42 @@ if (subGroup && subOptions) {
 }
 
 // ===============================
-// REQUEST FORM VALIDATION
+// GUEST REQUEST SUBMISSION (NEW LOGIC)
 // ===============================
-// ... validation functions remain the same ...
-
 const requestForm = document.getElementById("requestForm");
 
 if (requestForm) {
     requestForm.addEventListener("submit", function (e) {
         e.preventDefault();
 
-        // 1. Run ALL Validations (Same as your original code)
         let valid = true;
+
+        // Validate ALL fields (as required by the new Guest-First submission)
         if (!validateName("name", "nameError", "Name", true)) valid = false;
         if (!validateName("middleName", "middleNameError", "Middle Name", false)) valid = false;
         if (!validateName("surname", "surnameError", "Surname", true)) valid = false;
         if (!validatePESEL("pesel", "peselError")) valid = false;
         if (!validatePhone("phone", "phoneError", false)) valid = false;
         if (!validateEmailField("email", "emailError", true)) valid = false;
-        
+
         const selectedType = document.querySelector("input[name='requestType']:checked");
         if (!selectedType) {
             document.getElementById("typeError").style.display = "block";
             valid = false;
-        } else { document.getElementById("typeError").style.display = "none"; }
+        } else {
+            document.getElementById("typeError").style.display = "none";
+        }
 
         const selectedSub = document.querySelector("input[name='subType']:checked");
         if (selectedType && !selectedSub) {
             document.getElementById("subError").style.display = "block";
             valid = false;
-        } else { document.getElementById("subError").style.display = "none"; }
+        } else {
+            document.getElementById("subError").style.display = "none";
+        }
 
         if (valid) {
-            // 2. Prepare Data (Send EVERYTHING)
+            // Prepare Data (Send EVERYTHING)
             const formData = {
                 name: document.getElementById("name").value.trim(),
                 middleName: document.getElementById("middleName").value.trim(),
@@ -209,11 +195,11 @@ if (requestForm) {
                 phone: document.getElementById("phone").value.trim(),
                 email: document.getElementById("email").value.trim(),
                 requestType: selectedType.value,
-                subcategory: selectedSub.value,
+                subcategory: selectedSub ? selectedSub.value : null,
                 description: document.getElementById("description").value.trim()
             };
 
-            // 3. Send to Smart Backend
+            // Send to the SMART submit-request endpoint
             fetch('https://townhall-backend-jbj3.onrender.com/submit-request', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -233,19 +219,19 @@ if (requestForm) {
                         if (subGroup) subGroup.style.display = "none";
                     }, 10000);
                 } else {
-                    alert("Error: " + data.message);
+                    alert("Error submitting request: " + data.message);
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert("Could not connect to server.");
+                alert("Could not connect to the backend server.");
             });
         }
     });
 }
 
 // ===============================
-// REGISTRATION FORM VALIDATION
+// REGISTRATION FORM VALIDATION (UPDATED WITH GUEST UPGRADE LOGIC)
 // ===============================
 const registrationForm = document.getElementById("registrationForm");
 
@@ -255,28 +241,17 @@ if (registrationForm) {
 
         let valid = true;
 
-        // Validate Name
+        // Run ALL Client-Side Validations (RETAINED)
         if (!validateName("name", "nameError", "Name", true)) valid = false;
-
-        // Validate Middle Name (optional)
         if (!validateName("middleName", "middleNameError", "Middle Name", false)) valid = false;
-
-        // Validate Surname
         if (!validateName("surname", "surnameError", "Surname", true)) valid = false;
-
-        // Validate PESEL
         if (!validatePESEL("pesel", "peselError")) valid = false;
-
-        // Validate Phone (optional)
         if (!validatePhone("phone", "phoneError", false)) valid = false;
-
-        // Validate Email (required)
         if (!validateEmailField("email", "emailError", true)) valid = false;
 
-        // PASSWORD VALIDATION
+        // PASSWORD VALIDATION (RETAINED)
         const password = document.getElementById("password").value.trim();
         const confirmPassword = document.getElementById("confirmPassword").value.trim();
-
         const strongPasswordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
 
         if (!password) {
@@ -314,7 +289,7 @@ if (registrationForm) {
                 password: document.getElementById("password").value.trim()
             };
 
-            // 2. Send to Server
+            // 2. Send to Server (Backend handles Create NEW or Upgrade GUEST)
             fetch('https://townhall-backend-jbj3.onrender.com/register', {
                 method: 'POST',
                 headers: {
@@ -324,9 +299,10 @@ if (registrationForm) {
             })
             .then(response => response.json())
             .then(data => {
-                if (data.message === 'User registered successfully!') {
+                if (data.message.includes('successfully!')) {
                     // SHOW SUCCESS ONLY IF SERVER SAYS YES
                     const successMsg = document.getElementById("registerSuccess");
+                    successMsg.textContent = data.message; // Use dynamic message from server
                     successMsg.style.display = "block";
                     successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
@@ -335,7 +311,7 @@ if (registrationForm) {
                         successMsg.style.display = "none";
                     }, 5000);
                 } else {
-                    // Show server error (e.g., "Email already exists")
+                    // Show server error (e.g., "User already exists!")
                     alert("Registration failed: " + data.message);
                 }
             })
@@ -343,6 +319,123 @@ if (registrationForm) {
                 console.error('Error:', error);
                 alert("Could not connect to the backend server.");
             });
-    }
+        }
+    });
+}
+
+// ===============================
+// LOGIN FORM VALIDATION (RETAINED FROM NEW FILES)
+// ===============================
+const loginForm = document.getElementById("login");
+
+if (loginForm) {
+    loginForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+        let valid = true;
+
+        const userId = document.getElementById("userId").value.trim();
+        if (!userId) {
+            showError("userIdError", "This field is required.");
+            valid = false;
+        } else {
+            hideError("userIdError");
+        }
+
+        const password = document.getElementById("password").value.trim();
+        if (!password) {
+            showError("passwordError", "This field is required.");
+            valid = false;
+        } else {
+            hideError("passwordError");
+        }
+
+        // NOTE: This is client-side only and needs a backend fetch to verify login
+        if (valid) {
+            // Placeholder for successful login until backend logic is added
+            localStorage.setItem("loggedInUser", userId);
+            window.location.href = "index_loggedin.html";
+        }
+    });
+}
+
+// ===============================
+// FORGOT PASSWORD FORM VALIDATION (RETAINED FROM NEW FILES)
+// ===============================
+const forgotForm = document.getElementById("forgot_password");
+
+if (forgotForm) {
+    forgotForm.addEventListener("submit", function(e) {
+        e.preventDefault(); 
+        let valid = true;
+
+        const emailInput = document.getElementById("email").value.trim();
+
+        if (!validateEmailField("email", "emailError", true)) valid = false;
+
+        if (valid) {
+            // NOTE: This is client-side only and needs a backend fetch
+            const successMsg = document.getElementById("forgotSuccess");
+            const emailSpan = document.getElementById("forgotEmail");
+            emailSpan.textContent = emailInput; 
+            successMsg.style.display = "block";
+        }
+    });
+}
+
+// ===============================
+// RESET PASSWORD FORM VALIDATION (RETAINED FROM NEW FILES)
+// ===============================
+const resetForm = document.getElementById("reset_password");
+
+if (resetForm) {
+    resetForm.addEventListener("submit", function(e) {
+        e.preventDefault(); 
+        let valid = true;
+
+        const emailInput = document.getElementById("email").value.trim();
+        const passwordInput = document.getElementById("password").value.trim();
+        const confirmPasswordInput = document.getElementById("Confpassword").value.trim();
+
+        // Validate Email
+        if (!validateEmailField("email", "emailError", true)) valid = false;
+
+        // Validate Password
+        if (!passwordInput) {
+            showError("passwordError", "This field is required.");
+            valid = false;
+        } else {
+            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+            if (!passwordPattern.test(passwordInput)) {
+                showError(
+                    "passwordError",
+                    "Password must be 8+ chars, include upper/lowercase, a digit and a symbol."
+                );
+                valid = false;
+            } else {
+                hideError("passwordError");
+            }
+        }
+
+        // Validate Confirm Password
+        if (!confirmPasswordInput) {
+            showError("ConfpasswordError", "This field is required.");
+            valid = false;
+        } else if (passwordInput !== confirmPasswordInput) {
+            showError("ConfpasswordError", "Passwords do not match.");
+            valid = false;
+        } else {
+            hideError("ConfpasswordError");
+        }
+
+        if (valid) {
+            // NOTE: This is client-side only and needs a backend fetch
+            const successMsg = document.getElementById("resetSuccess");
+            successMsg.style.display = "block";
+
+            setTimeout(() => {
+                resetForm.reset();
+                successMsg.style.display = "none";
+            }, 10000);
+        }
     });
 }
