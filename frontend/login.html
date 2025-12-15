@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="top-container">
+        <header class="main-header">
+            <h1>Townhall Online System</h1>
+            <p>Your portal for submitting requests and managing your account</p>
+        </header>
+        <nav class="navbar">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a class="active" href="login.html">Login</a></li>
+                <li><a href="request_form.html">Request Form</a></li>
+                <li><a href="signup.html">Account Registration</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div class = "container">
+        <h2>Login</h2>
+
+        <form id="login">
+            <label class="required">Email or Username:</label><br>
+            <input type="text" id="userId" name="userId" placeholder="Enter email or username" aria-describedby="userIdError" />
+            <div class="error-msg" id="userIdError" role="alert">This field is required.</div>
+
+            <label class="required">Password:</label><br>
+            <input type="password" id="password" name="password" aria-describedby="passwordError" />
+            <div class="error-msg" id="passwordError" role="alert">This field is required.</div>
+
+            <button type="submit">Submit</button><br><br>
+
+            <a href="forgot_password.html" id="forgotPasswordLink">Forgot Password?</a>
+        </form>
+    </div>
+
+    <footer class="footer">
+    © 2025 Townhall Project – Data Engineering
+    </footer>
+
+</body>
+</html>

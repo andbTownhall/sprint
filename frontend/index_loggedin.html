@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Townhall Online System - Logged In</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="top-container">
+        <header class="main-header">
+            <h1>Townhall Online System</h1>
+            <p>Your portal for submitting requests and managing your account</p>
+        </header>
+
+        <nav class="navbar">
+            <ul>
+                <li><a href="index_loggedin.html" class="active">Home</a></li>
+                <li><a href="request_form_loggedin.html">Request Form</a></li>
+                <li><a href="reset_password.html">Reset Password</a></li> 
+                <li><a id="logoutNav" href="#">Log Out</a></li> 
+            </ul>
+        </nav>
+    </div>
+
+    <main class="home-content">
+        <h2 id="welcomeMessage"></h2>
+        <p>This system allows residents to submit requests, track issues, and manage their accounts with ease.</p>
+        <p>Select an option from the menu above to get started.</p>
+    </div>
+    </main>
+
+
+    <footer class="footer">
+        © 2025 Townhall Project – Data Engineering
+    </footer>
+
+    <script>
+        // Get the logged-in user and update welcome message
+        const user = localStorage.getItem("loggedInUser");
+        const welcomeEl = document.getElementById("welcomeMessage");
+
+        if (user) {
+            welcomeEl.textContent = `Welcome, ${user}!`;
+        } else {
+            // If somehow someone lands here without logging in
+            welcomeEl.textContent = `Welcome, Guest! Please log in.`;
+        }
+
+        // Logout
+        document.getElementById("logoutNav").addEventListener("click", (e) => {
+            e.preventDefault();
+            localStorage.removeItem("loggedInUser");
+            window.location.href = "index.html"; // back to original index
+        });
+    </script>
+</body>
+</html>
