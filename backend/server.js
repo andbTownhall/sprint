@@ -25,19 +25,50 @@ sql.connect(dbConfig).then(pool => {
     if (pool.connected) console.log('Connected to SQL Server successfully - AZURE');
 }).catch(err => console.error('Database Connection Failed:', err));
 
-// Registration Endpoint
+// ==========================================
+// 1. SMART REGISTRATION (Handle Guests)
+// ==========================================
 app.post('/register', async (req, res) => {
     const { name, middleName, surname, pesel, phone, email, password } = req.body;
 
     try {
-        // 1. Encrypt Password
+        const pool = await sql.connect(dbConfig);
+        
+        // Encrypt Password
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // 2. Connect to DB
-        const pool = await sql.connect(dbConfig);
+        // Check if user exists (Guest or Real)
+        const checkUser = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .input('pesel', sql.NVarChar, pesel)
+            .query('SELECT id, password_hash FROM users WHERE email = @email OR pesel = @pesel');
 
-        // 3. Insert User (Using Parameters to prevent hacks)
+        if (checkUser.recordset.length > 0) {
+            const user = checkUser.recordset[0];
+
+            // SCENARIO A: User exists but is a GUEST (No password) -> UPGRADE THEM
+            if (user.password_hash === null) {
+                await pool.request()
+                    .input('id', sql.Int, user.id)
+                    .input('first', sql.NVarChar, name)
+                    .input('last', sql.NVarChar, surname)
+                    .input('phone', sql.NVarChar, phone)
+                    .input('pass', sql.NVarChar, passwordHash)
+                    .query(`
+                        UPDATE users 
+                        SET first_name = @first, last_name = @last, phone_number = @phone, 
+                            password_hash = @pass, is_active = 1
+                        WHERE id = @id
+                    `);
+                return res.status(200).json({ message: 'Account registered successfully! (Guest account upgraded)' });
+            } 
+            
+            // SCENARIO B: User exists and has a password -> ERROR
+            return res.status(409).json({ message: 'User already exists!' });
+        }
+
+        // SCENARIO C: New User -> INSERT
         await pool.request()
             .input('first', sql.NVarChar, name)
             .input('middle', sql.NVarChar, middleName)
@@ -47,19 +78,76 @@ app.post('/register', async (req, res) => {
             .input('email', sql.NVarChar, email)
             .input('pass', sql.NVarChar, passwordHash)
             .query(`
-                INSERT INTO users (first_name, middle_name, last_name, pesel, phone_number, email, password_hash)
-                VALUES (@first, @middle, @last, @pesel, @phone, @email, @pass)
+                INSERT INTO users (first_name, middle_name, last_name, pesel, phone_number, email, password_hash, is_active)
+                VALUES (@first, @middle, @last, @pesel, @phone, @email, @pass, 1)
             `);
 
         res.status(201).json({ message: 'User registered successfully!' });
 
     } catch (err) {
         console.error(err);
-        // Error 2627 is the SQL Server code for "Unique Constraint Violation" (Duplicate Email/PESEL)
-        if (err.number === 2627) {
-            return res.status(409).json({ message: 'Email or PESEL already exists!' });
-        }
         res.status(500).json({ message: 'Database error' });
+    }
+});
+
+// ==========================================
+// 2. GUEST REQUEST SUBMISSION
+// ==========================================
+app.post('/submit-request', async (req, res) => {
+    // We receive EVERYTHING from the form
+    const { name, middleName, surname, pesel, phone, email, requestType, subcategory, description } = req.body;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+        let userId;
+
+        // Step 1: Check if user exists
+        const userCheck = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .input('pesel', sql.NVarChar, pesel)
+            .query('SELECT id FROM users WHERE email = @email OR pesel = @pesel');
+
+        if (userCheck.recordset.length > 0) {
+            // User exists (Guest or Registered) -> Use their ID
+            userId = userCheck.recordset[0].id;
+        } else {
+            // User does NOT exist -> Create "Guest" (Password is NULL)
+            const newUser = await pool.request()
+                .input('first', sql.NVarChar, name)
+                .input('middle', sql.NVarChar, middleName)
+                .input('last', sql.NVarChar, surname)
+                .input('pesel', sql.NVarChar, pesel)
+                .input('phone', sql.NVarChar, phone)
+                .input('email', sql.NVarChar, email)
+                .query(`
+                    INSERT INTO users (first_name, middle_name, last_name, pesel, phone_number, email, password_hash, is_active)
+                    OUTPUT INSERTED.id
+                    VALUES (@first, @middle, @last, @pesel, @phone, @email, NULL, 0)
+                `);
+            userId = newUser.recordset[0].id;
+        }
+
+        // Step 2: Create the Request linked to that User ID
+        const result = await pool.request()
+            .input('uid', sql.Int, userId)
+            .input('type', sql.NVarChar, requestType)
+            .input('sub', sql.NVarChar, subcategory)
+            .input('desc', sql.NVarChar, description)
+            .query(`
+                INSERT INTO requests (user_id, request_type, subcategory, description)
+                OUTPUT INSERTED.request_id
+                VALUES (@uid, @type, @sub, @desc)
+            `);
+
+        res.status(201).json({ 
+            success: true, 
+            message: 'Request submitted successfully!',
+            requestId: `REQ-${result.recordset[0].request_id}` 
+        });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Database error' });
     }
 });
 
