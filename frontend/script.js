@@ -352,11 +352,50 @@ if (registrationForm) {
             .then(data => {
                 if (data.message.includes('successfully!')) {
                     // SHOW SUCCESS ONLY IF SERVER SAYS YES
-                    const successMsg = document.getElementById("registerSuccess");
-                    successMsg.textContent = data.message; // Use dynamic message from server
-                    successMsg.style.display = "block";
-                    successMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    const email = document.getElementById("email").value.trim();
+            const successMsg = document.getElementById("registerSuccess");
+            const verifyLink = document.getElementById("verifyLink");
 
+            // set verification link
+            verifyLink.href = `email_confirmation.html?email=${encodeURIComponent(email)}`;
+
+            // show success message
+            successMsg.style.display = "block";
+            successMsg.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // ===============================
+    // SIMULATED EMAIL WINDOW (LIKE RESET PASSWORD)
+    // ===============================
+
+            
+            const fakeVerificationCode = Math.floor(100000 + Math.random() * 900000);
+
+            sessionStorage.setItem("verificationCode", fakeVerificationCode);
+            sessionStorage.setItem("verificationEmail", email);
+
+            const emailWindow = window.open("", "_blank", "width=600,height=400");
+
+            if (emailWindow) {
+                emailWindow.document.write(`
+                    <div style="font-family: sans-serif; padding: 40px; text-align: center;">
+                            <h1>Townhall Email Verification</h1>
+                            <p>You need to verify your email</p>
+                            <div style="background: #f0f0f0; padding: 20px; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+                                ${fakeVerificationCode}
+                            </div>
+                            <p>This code expires in 15 minutes.</p>
+                            <p style="color: #666; font-size: 12px;">(This is a simulated email for the demo)</p>
+                        </div>
+                `);
+            } else {
+                alert("Please allow pop-ups to see the verification email.");
+            }
+
+            // OPTIONAL: redirect automatically after a moment
+            setTimeout(() => {
+                window.location.href =
+                        `email_confirmation.html?email=${encodeURIComponent(email)}`;
+            }, 3000);
                     setTimeout(() => {
                         document.getElementById("registrationForm").reset(); // Reset form
                         successMsg.style.display = "none";
@@ -373,6 +412,55 @@ if (registrationForm) {
         }
     });
 }
+
+// ===============================
+// EMAIL CONFIRMATION PAGE LOGIC
+// ===============================
+
+const verifyForm = document.getElementById("email_confirmation");
+
+if (verifyForm) {
+    verifyForm.addEventListener("submit", function(e) {
+        e.preventDefault();
+
+        const inputCode = document.getElementById("resetCode").value.trim();
+        const storedCode = sessionStorage.getItem("verificationCode"); // code stored when registration/email sent
+
+        const errorDiv = document.getElementById("verifyError");
+        const successDiv = document.getElementById("verifySuccess");
+
+        // Hide messages initially
+        errorDiv.style.display = "none";
+        successDiv.style.display = "none";
+
+        if (!inputCode) {
+            errorDiv.textContent = "Please enter the code.";
+            errorDiv.style.display = "block";
+            return;
+        }
+
+        if (inputCode === storedCode) {
+            // correct code
+            successDiv.style.display = "block";
+
+            // optional: clear session storage so code can't be reused
+            sessionStorage.removeItem("verificationCode");
+            sessionStorage.removeItem("verificationEmail");
+
+            // optionally reset form after a while
+            setTimeout(() => {
+                successDiv.style.display = "none";
+                verifyForm.reset();
+            }, 5000);
+        } else {
+            // incorrect code
+            errorDiv.textContent = "Invalid code. Try again.";
+            errorDiv.style.display = "block";
+        }
+    });
+}
+
+
 
 
 // ===============================
@@ -598,4 +686,4 @@ if (logoutNav) {
         //redirect to homepage
         window.location.href = "index.html";
     });
-}
+}ś

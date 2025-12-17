@@ -28,8 +28,11 @@
   <div class="container">
     <h2>Account Registration</h2>
 
-    <div class="success-msg" id="registerSuccess">Your account has been registered successfully!</div>
-
+    <div class="success-msg" id="registerSuccess" style="display:none;">
+    <strong>Almost done!</strong><br>
+    Please verify your email address to complete your registration.<br><br>
+    <a id="verifyLink" href="#">Go to email confirmation</a>
+</div>
     <form id="registrationForm" novalidate>
 
       <label class="required">Name</label>

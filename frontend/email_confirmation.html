@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Confirmation</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <div class="top-container">
+        <header class="main-header">
+            <h1>Townhall Online System</h1>
+            <p>Your portal for submitting requests and managing your account</p>
+        </header>
+        <nav class="navbar">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="request_form.html">Request Form</a></li>
+                <li><a href="signup.html">Account Registration</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+        </nav>
+    </div>
+    <div class = "container">
+        <h2>Email Confirmation</h2>
+
+        <p>Please, check your inbox to find the code you need to verify your email.
+            If you don't see the email, check your spam folder or try again.
+        </p>
+
+        <form id="email_confirmation" novalidate>
+            <label class="required" style="color: #005fcc;">Verification Code:</label><br>
+            <input type="text" id="resetCode" placeholder="Enter the 6-digit code" style="font-weight: bold; letter-spacing: 2px;">
+            <div class="error-msg" id="verifyError" role="alert">This field is required.</div>
+
+            <div class="success-msg" id="verifySuccess" style="display:none; color:green; margin-top: 10px;">
+                Your email has been successfully verified! <a href="login.html">Click here to login</a>.
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <footer class="footer">
+    © 2025 Townhall Project – Data Engineering
+    </footer>
+    
+</body>
+</html>
