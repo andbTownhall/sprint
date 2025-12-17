@@ -156,18 +156,20 @@ if (subGroup && subOptions) {
 const requestForm = document.getElementById("requestForm");
 
 if (requestForm) {
-    const storedUser = localStorage.getItem("userProfile");
-    if (storedUser) {
+    //for updated autofill
+    const isLoggedIn = localStorage.getItem("loggedInUser"); //check for the "Badge"
+    const storedUser = localStorage.getItem("userProfile");  //check for the "Folder"
+
+    // Only fill IF we have BOTH the badge and the folder
+    if (isLoggedIn && storedUser) {
         const user = JSON.parse(storedUser);
         
-        //FILL IF EXISTS
         if (document.getElementById("name")) document.getElementById("name").value = user.first_name || "";
         if (document.getElementById("middleName")) document.getElementById("middleName").value = user.middle_name || "";
         if (document.getElementById("surname")) document.getElementById("surname").value = user.last_name || "";
         if (document.getElementById("pesel")) document.getElementById("pesel").value = user.pesel || "";
         if (document.getElementById("phone")) document.getElementById("phone").value = user.phone_number || "";
         if (document.getElementById("email")) document.getElementById("email").value = user.email || "";
-
     }
 
     requestForm.addEventListener("submit", function (e) {
