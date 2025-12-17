@@ -404,12 +404,9 @@ function startCountdown(userId, lockUntil) {
 }
 
 // ===============================
-// LOGIN FORM (Now connects to Backend)
+// LOGIN (lockout + session storage)
 // ===============================
 const loginForm = document.getElementById("login");
-const MAX_ATTEMPTS = 5;
-const LOCK_TIME = 10 * 60 * 1000; // 10 minutes
-const loginAttempts = {}; // { userId: { count, lockUntil, timerId } }
 
 if (loginForm) {
     loginForm.addEventListener("submit", function(e) {
@@ -421,24 +418,6 @@ if (loginForm) {
         if (!userId || !password) {
             showError("passwordError", "Please enter both email and password.");
             return;
-        }
-
-        // Initialize if first attempt
-        if (!loginAttempts[userId]) {
-            loginAttempts[userId] = { count: 0, lockUntil: null, timerId: null };
-        }
-
-        const attempt = loginAttempts[userId];
-
-        // Check if currently locked
-        if (attempt.lockUntil && Date.now() < attempt.lockUntil) {
-            startCountdown(userId, attempt.lockUntil);
-            return;
-        } else if (attempt.lockUntil && Date.now() >= attempt.lockUntil) {
-            // Unlock after timer
-            attempt.count = 0;
-            attempt.lockUntil = null;
-            if (attempt.timerId) clearInterval(attempt.timerId);
         }
 
         //check lockout status
@@ -461,42 +440,28 @@ if (loginForm) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // SAVE USER DATA TO STORAGE
-                localStorage.setItem("userProfile", JSON.stringify(data.user));
-                localStorage.setItem("loggedInUser", data.user.first_name); // For welcome msg
-                
-                window.location.href = "index_loggedin.html";
-            } else {
-                showError("passwordError", data.message);
-            }
-        })
-        .catch(err => {
-            console.error(err);
-            alert("Could not connect to the backend server.");
-        });
-    });
-
-    function startCountdown(userId, lockUntil) {
-        const attempt = loginAttempts[userId];
-
-        if (attempt.timerId) clearInterval(attempt.timerId);
-
-        attempt.timerId = setInterval(() => {
-            const now = Date.now();
-            const diff = lockUntil - now;
-
-            if (diff <= 0) {
-                clearInterval(attempt.timerId);
+                //reset lock on success
                 attempt.count = 0;
                 attempt.lockUntil = null;
-                showError("passwordError", "You can try logging in again.");
+                if (attempt.timerId) clearInterval(attempt.timerId);
+
+                //correct session logic
+                sessionStorage.setItem("userProfile", JSON.stringify(data.user));
+                sessionStorage.setItem("loggedInUser", data.user.first_name); 
+                window.location.href = "index_loggedin.html";
             } else {
-                const minutes = Math.floor(diff / 60000);
-                const seconds = Math.floor((diff % 60000) / 1000);
-                showError("passwordError", `Account locked. Try again in ${minutes}m ${seconds}s`);
+                //increment attempts on failure
+                attempt.count++;
+                if (attempt.count >= MAX_ATTEMPTS) {
+                    attempt.lockUntil = Date.now() + LOCK_TIME;
+                    startCountdown(userId, attempt.lockUntil);
+                } else {
+                    showError("passwordError", `${data.message} (Attempt ${attempt.count} of ${MAX_ATTEMPTS})`);
+                }
             }
-        }, 1000);
-    }
+        })
+        .catch(err => console.error(err));
+    });
 }
 
 //forget pswd (request code)
