@@ -103,6 +103,29 @@ function validateEmailField(id, errorId, isRequired = true) {
     return true;
 }
 
+//global nav
+document.addEventListener("DOMContentLoaded", () => {
+    const isLoggedIn = sessionStorage.getItem("loggedInUser");
+    
+    if (isLoggedIn) {
+        // Find any link that points to login.html
+        const loginLinks = document.querySelectorAll('a[href="login.html"]');
+        
+        loginLinks.forEach(link => {
+            link.textContent = "Log Out"; //change text to Log Out
+            link.href = "#";              //stop from going to login page
+            
+            // Add the logout click listener
+            link.addEventListener("click", function(e) {
+                e.preventDefault();
+                sessionStorage.removeItem("loggedInUser");
+                sessionStorage.removeItem("userProfile");
+                window.location.href = "index.html";
+            });
+        });
+    }
+});
+
 // ===============================
 // SUBCATEGORY DEFINITIONS
 // ===============================
@@ -157,8 +180,8 @@ const requestForm = document.getElementById("requestForm");
 
 if (requestForm) {
     //for updated autofill
-    const isLoggedIn = localStorage.getItem("loggedInUser"); //check for the "Badge"
-    const storedUser = localStorage.getItem("userProfile");  //check for the "Folder"
+    const isLoggedIn = sessionStorage.getItem("loggedInUser"); 
+    const storedUser = sessionStorage.getItem("userProfile");
 
     // Only fill IF we have BOTH the badge and the folder
     if (isLoggedIn && storedUser) {
@@ -365,12 +388,13 @@ if (loginForm) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                // SAVE USER DATA TO STORAGE
-                localStorage.setItem("userProfile", JSON.stringify(data.user));
-                localStorage.setItem("loggedInUser", data.user.first_name); // For welcome msg
+                //sessionStorage so data dies when tab closes
+                sessionStorage.setItem("userProfile", JSON.stringify(data.user));
+                sessionStorage.setItem("loggedInUser", data.user.first_name); 
                 
                 window.location.href = "index_loggedin.html";
-            } else {
+            }
+            else {
                 showError("passwordError", data.message);
             }
         })
@@ -495,5 +519,21 @@ if (resetForm) {
             })
             .catch(err => console.error(err));
         }
+    });
+}
+
+//logout
+const logoutNav = document.getElementById("logoutNav");
+
+if (logoutNav) {
+    logoutNav.addEventListener("click", function(e) {
+        e.preventDefault();
+        
+        //clear session storage
+        sessionStorage.removeItem("loggedInUser");
+        sessionStorage.removeItem("userProfile");
+
+        //redirect to homepage
+        window.location.href = "index.html";
     });
 }

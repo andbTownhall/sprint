@@ -18,6 +18,7 @@
             <ul>
                 <li><a href="index_loggedin.html" class="active">Home</a></li>
                 <li><a href="request_form_loggedin.html">Request Form</a></li>
+                <li><a href="forgot_password.html">Forgot Password</a></li>
                 <li><a id="logoutNav" href="#">Log Out</a></li> 
             </ul>
         </nav>
@@ -37,7 +38,7 @@
 
     <script>
         // Get the logged-in user and update welcome message
-        const user = localStorage.getItem("loggedInUser");
+        const user = sessionStorage.getItem("loggedInUser");
         const welcomeEl = document.getElementById("welcomeMessage");
 
         if (user) {
@@ -50,7 +51,7 @@
         // Logout
         document.getElementById("logoutNav").addEventListener("click", (e) => {
             e.preventDefault();
-            localStorage.removeItem("loggedInUser");
+            sessionStorage.removeItem("loggedInUser");
             window.location.href = "index.html"; // back to original index
         });
     </script>
