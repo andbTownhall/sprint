@@ -376,69 +376,94 @@ if (loginForm) {
     });
 }
 
-// ===============================
-// FORGOT PASSWORD FORM VALIDATION (RETAINED FROM NEW FILES)
-// ===============================
+//forget pswd (request code)
 const forgotForm = document.getElementById("forgot_password");
 
 if (forgotForm) {
     forgotForm.addEventListener("submit", function(e) {
         e.preventDefault(); 
-        let valid = true;
-
         const emailInput = document.getElementById("email").value.trim();
 
-        if (!validateEmailField("email", "emailError", true)) valid = false;
+        if (!validateEmailField("email", "emailError", true)) return;
 
-        if (valid) {
-            // NOTE: This is client-side only and needs a backend fetch
-            const successMsg = document.getElementById("forgotSuccess");
-            const emailSpan = document.getElementById("forgotEmail");
-            emailSpan.textContent = emailInput; 
-            successMsg.style.display = "block";
-        }
+        fetch('https://townhall-backend-jbj3.onrender.com/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: emailInput })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                if (data.fake) {
+                   //email does not exist
+                   alert("If this email exists, a code has been sent.");
+                } else {
+                    //SIMULATE EMAIL
+                    const emailWindow = window.open("", "_blank", "width=600,height=400");
+                    emailWindow.document.write(`
+                        <div style="font-family: sans-serif; padding: 40px; text-align: center;">
+                            <h1>Townhall Password Reset</h1>
+                            <p>You requested a password reset.</p>
+                            <div style="background: #f0f0f0; padding: 20px; font-size: 24px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+                                ${data.debugCode}
+                            </div>
+                            <p>This code expires in 15 minutes.</p>
+                            <p style="color: #666; font-size: 12px;">(This is a simulated email for the demo)</p>
+                        </div>
+                    `);
+
+                    //redirect to reset page with email param
+                    window.location.href = `reset_password.html?email=${encodeURIComponent(emailInput)}`;
+                }
+            }
+        })
+        .catch(err => console.error(err));
     });
 }
 
-// ===============================
-// RESET PASSWORD FORM VALIDATION (RETAINED FROM NEW FILES)
-// ===============================
+//reset pswd (verify code + new psswd)
 const resetForm = document.getElementById("reset_password");
 
 if (resetForm) {
+    //Autofill email from url (so user doesn't have to type it again)
+    const urlParams = new URLSearchParams(window.location.search);
+    const emailFromUrl = urlParams.get('email');
+    if (emailFromUrl) {
+        document.getElementById("email").value = emailFromUrl;
+    }
+
     resetForm.addEventListener("submit", function(e) {
         e.preventDefault(); 
         let valid = true;
 
         const emailInput = document.getElementById("email").value.trim();
+        const codeInput = document.getElementById("resetCode").value.trim();
         const passwordInput = document.getElementById("password").value.trim();
         const confirmPasswordInput = document.getElementById("Confpassword").value.trim();
 
-        // Validate Email
+        //validate e
         if (!validateEmailField("email", "emailError", true)) valid = false;
+        
+        if (!codeInput) {
+            document.getElementById("codeError").style.display = "block";
+            valid = false;
+        } else {
+            document.getElementById("codeError").style.display = "none";
+        }
 
-        // Validate Password
+        //validate p
+        const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
         if (!passwordInput) {
             showError("passwordError", "This field is required.");
             valid = false;
+        } else if (!passwordPattern.test(passwordInput)) {
+            showError("passwordError", "Password must be 8+ chars, include upper/lowercase, a digit and a symbol.");
+            valid = false;
         } else {
-            const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
-            if (!passwordPattern.test(passwordInput)) {
-                showError(
-                    "passwordError",
-                    "Password must be 8+ chars, include upper/lowercase, a digit and a symbol."
-                );
-                valid = false;
-            } else {
-                hideError("passwordError");
-            }
+            hideError("passwordError");
         }
 
-        // Validate Confirm Password
-        if (!confirmPasswordInput) {
-            showError("ConfpasswordError", "This field is required.");
-            valid = false;
-        } else if (passwordInput !== confirmPasswordInput) {
+        if (passwordInput !== confirmPasswordInput) {
             showError("ConfpasswordError", "Passwords do not match.");
             valid = false;
         } else {
@@ -446,14 +471,27 @@ if (resetForm) {
         }
 
         if (valid) {
-            // NOTE: This is client-side only and needs a backend fetch
-            const successMsg = document.getElementById("resetSuccess");
-            successMsg.style.display = "block";
-
-            setTimeout(() => {
-                resetForm.reset();
-                successMsg.style.display = "none";
-            }, 10000);
+            fetch('https://townhall-backend-jbj3.onrender.com/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    email: emailInput, 
+                    code: codeInput, 
+                    newPassword: passwordInput 
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    const successMsg = document.getElementById("resetSuccess");
+                    successMsg.style.display = "block";
+                    // Hide form so they don't submit again
+                    resetForm.style.display = "none"; 
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(err => console.error(err));
         }
     });
 }

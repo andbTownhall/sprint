@@ -190,4 +190,76 @@ app.post('/login', async (req, res) => {
     }
 });
 
+//forgot pswd (6 digit code)
+app.post('/forgot-password', async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        //generate 6-digit code
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiry = new Date(Date.now() + 900000);//expires in 15 minutes
+
+        //save code to db
+        await pool.request()
+            .input('code', sql.NVarChar, code)
+            .input('expiry', sql.DateTime, expiry)
+            .input('email', sql.NVarChar, email)
+            .query('UPDATE users SET reset_token = @code, reset_token_expiry = @expiry WHERE email = @email');
+
+        //return code to frontend (simulate email
+        res.json({ success: true, debugCode: code });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Database error' });
+    }
+});
+
+//reset psswd - verify code
+app.post('/reset-password', async (req, res) => {
+    const { email, code, newPassword } = req.body;
+
+    try {
+        const pool = await sql.connect(dbConfig);
+
+        //verify email + code + expiry
+        const check = await pool.request()
+            .input('email', sql.NVarChar, email)
+            .input('code', sql.NVarChar, code)
+            .query(`
+                SELECT id FROM users 
+                WHERE email = @email 
+                AND reset_token = @code 
+                AND reset_token_expiry > GETDATE()
+            `);
+
+        if (check.recordset.length === 0) {
+            return res.status(400).json({ success: false, message: 'Invalid or expired code.' });
+        }
+
+        //hash new psswd
+        const salt = await bcrypt.genSalt(10);
+        const passwordHash = await bcrypt.hash(newPassword, salt);
+
+        //update psswd & clear code
+        await pool.request()
+            .input('pass', sql.NVarChar, passwordHash)
+            .input('email', sql.NVarChar, email)
+            .query(`
+                UPDATE users 
+                SET password_hash = @pass, reset_token = NULL, reset_token_expiry = NULL 
+                WHERE email = @email
+            `);
+
+        res.json({ success: true, message: 'Password reset successfully!' });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+
 app.listen(3000, () => console.log('Server running on port 3000'));
