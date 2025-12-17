@@ -108,14 +108,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const isLoggedIn = sessionStorage.getItem("loggedInUser");
     
     if (isLoggedIn) {
-        // Find any link that points to login.html
+        //redirect
+        const path = window.location.pathname;
+        if (path.endsWith("index.html") || path.endsWith("/")) {
+             //prevent loops
+             if (!path.includes("index_loggedin.html")) {
+                 window.location.href = "index_loggedin.html";
+             }
+        }
+
+        //nav fix
+        const homeLinks = document.querySelectorAll('a[href="index.html"]');
+        homeLinks.forEach(link => {
+            link.href = "index_loggedin.html";
+        });
+
+        //logout fix
         const loginLinks = document.querySelectorAll('a[href="login.html"]');
-        
         loginLinks.forEach(link => {
-            link.textContent = "Log Out"; //change text to Log Out
-            link.href = "#";              //stop from going to login page
-            
-            // Add the logout click listener
+            link.textContent = "Log Out";
+            link.href = "#";
             link.addEventListener("click", function(e) {
                 e.preventDefault();
                 sessionStorage.removeItem("loggedInUser");
@@ -362,8 +374,37 @@ if (registrationForm) {
     });
 }
 
+
 // ===============================
-// LOGIN FORM (Now connects to Backend)
+// LOGIN LOCKOUT SETTINGS
+// ===============================
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 10 * 60 * 1000; // 10 minutes
+const loginAttempts = {}; // Stores retry counts
+
+function startCountdown(userId, lockUntil) {
+    const attempt = loginAttempts[userId];
+    if (attempt.timerId) clearInterval(attempt.timerId);
+
+    attempt.timerId = setInterval(() => {
+        const now = Date.now();
+        const diff = lockUntil - now;
+
+        if (diff <= 0) {
+            clearInterval(attempt.timerId);
+            attempt.count = 0;
+            attempt.lockUntil = null;
+            showError("passwordError", "Lock expired. You can try logging in again.");
+        } else {
+            const minutes = Math.floor(diff / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            showError("passwordError", `Account locked. Try again in ${minutes}m ${seconds}s`);
+        }
+    }, 1000);
+}
+
+// ===============================
+// LOGIN (lockout + session storage)
 // ===============================
 const loginForm = document.getElementById("login");
 
@@ -379,7 +420,18 @@ if (loginForm) {
             return;
         }
 
-        // Fetch Login from Backend
+        //check lockout status
+        if (!loginAttempts[userId]) {
+            loginAttempts[userId] = { count: 0, lockUntil: null, timerId: null };
+        }
+        const attempt = loginAttempts[userId];
+
+        if (attempt.lockUntil && Date.now() < attempt.lockUntil) {
+            startCountdown(userId, attempt.lockUntil);
+            return; //still locked
+        }
+
+        //fetch login from backend
         fetch('https://townhall-backend-jbj3.onrender.com/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -388,14 +440,24 @@ if (loginForm) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                //sessionStorage so data dies when tab closes
+                //reset lock on success
+                attempt.count = 0;
+                attempt.lockUntil = null;
+                if (attempt.timerId) clearInterval(attempt.timerId);
+
+                //correct session logic
                 sessionStorage.setItem("userProfile", JSON.stringify(data.user));
                 sessionStorage.setItem("loggedInUser", data.user.first_name); 
-                
                 window.location.href = "index_loggedin.html";
-            }
-            else {
-                showError("passwordError", data.message);
+            } else {
+                //increment attempts on failure
+                attempt.count++;
+                if (attempt.count >= MAX_ATTEMPTS) {
+                    attempt.lockUntil = Date.now() + LOCK_TIME;
+                    startCountdown(userId, attempt.lockUntil);
+                } else {
+                    showError("passwordError", `${data.message} (Attempt ${attempt.count} of ${MAX_ATTEMPTS})`);
+                }
             }
         })
         .catch(err => console.error(err));
