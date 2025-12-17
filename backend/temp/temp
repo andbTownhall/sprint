@@ -57,3 +57,8 @@ server admin login:
 townhall_admin
 password:
 SecureHasuo77@
+
+
+
+
+localStorage.clear(); sessionStorage.clear(); location.reload();
