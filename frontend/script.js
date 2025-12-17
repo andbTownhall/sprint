@@ -338,9 +338,12 @@ if (registrationForm) {
 }
 
 // ===============================
-// LOGIN FORM (Now connects to Backend)
+// LOGIN FORM (Backend + Frontend Lock with Countdown)
 // ===============================
 const loginForm = document.getElementById("login");
+const MAX_ATTEMPTS = 5;
+const LOCK_TIME = 10 * 60 * 1000; // 10 minutes
+const loginAttempts = {}; // { userId: { count, lockUntil, timerId } }
 
 if (loginForm) {
     loginForm.addEventListener("submit", function(e) {
@@ -354,6 +357,24 @@ if (loginForm) {
             return;
         }
 
+        // Initialize if first attempt
+        if (!loginAttempts[userId]) {
+            loginAttempts[userId] = { count: 0, lockUntil: null, timerId: null };
+        }
+
+        const attempt = loginAttempts[userId];
+
+        // Check if currently locked
+        if (attempt.lockUntil && Date.now() < attempt.lockUntil) {
+            startCountdown(userId, attempt.lockUntil);
+            return;
+        } else if (attempt.lockUntil && Date.now() >= attempt.lockUntil) {
+            // Unlock after timer
+            attempt.count = 0;
+            attempt.lockUntil = null;
+            if (attempt.timerId) clearInterval(attempt.timerId);
+        }
+
         // Fetch Login from Backend
         fetch('https://townhall-backend-jbj3.onrender.com/login', {
             method: 'POST',
@@ -363,17 +384,55 @@ if (loginForm) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                // SUCCESS → reset attempts
+                attempt.count = 0;
+                attempt.lockUntil = null;
+                if (attempt.timerId) clearInterval(attempt.timerId);
+
                 // SAVE USER DATA TO STORAGE
                 localStorage.setItem("userProfile", JSON.stringify(data.user));
-                localStorage.setItem("loggedInUser", data.user.first_name); // For welcome msg
+                localStorage.setItem("loggedInUser", data.user.first_name);
                 
                 window.location.href = "index_loggedin.html";
             } else {
-                showError("passwordError", data.message);
+                // FAILED → increment attempts
+                attempt.count++;
+
+                if (attempt.count >= MAX_ATTEMPTS) {
+                    attempt.lockUntil = Date.now() + LOCK_TIME;
+                    startCountdown(userId, attempt.lockUntil);
+                } else {
+                    showError("passwordError", `${data.message} Attempt ${attempt.count} of ${MAX_ATTEMPTS}`);
+                }
             }
         })
-        .catch(err => console.error(err));
+        .catch(err => {
+            console.error(err);
+            alert("Could not connect to the backend server.");
+        });
     });
+
+    function startCountdown(userId, lockUntil) {
+        const attempt = loginAttempts[userId];
+
+        if (attempt.timerId) clearInterval(attempt.timerId);
+
+        attempt.timerId = setInterval(() => {
+            const now = Date.now();
+            const diff = lockUntil - now;
+
+            if (diff <= 0) {
+                clearInterval(attempt.timerId);
+                attempt.count = 0;
+                attempt.lockUntil = null;
+                showError("passwordError", "You can try logging in again.");
+            } else {
+                const minutes = Math.floor(diff / 60000);
+                const seconds = Math.floor((diff % 60000) / 1000);
+                showError("passwordError", `Account locked. Try again in ${minutes}m ${seconds}s`);
+            }
+        }, 1000);
+    }
 }
 
 // ===============================

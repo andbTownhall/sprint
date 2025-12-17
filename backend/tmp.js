@@ -15,28 +15,26 @@ const dbConfig = {
     server: 'townhall-server-s198229.database.windows.net',
     database: 'townhall_db',
     options: {
-        encrypt: true, 
+        encrypt: true,
         trustServerCertificate: false
     }
 };
 
-//test
+// Test DB connection
 sql.connect(dbConfig).then(pool => {
     if (pool.connected) console.log('Connected to SQL Server successfully - AZURE');
 }).catch(err => console.error('Database Connection Failed:', err));
 
-//Guests
+// Guests - register
 app.post('/register', async (req, res) => {
     const { name, middleName, surname, pesel, phone, email, password } = req.body;
 
     try {
         const pool = await sql.connect(dbConfig);
-        
-        //encrypt psswd
+
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
-        // Check if user exists (guest or real)
         const checkUser = await pool.request()
             .input('email', sql.NVarChar, email)
             .input('pesel', sql.NVarChar, pesel)
@@ -44,8 +42,6 @@ app.post('/register', async (req, res) => {
 
         if (checkUser.recordset.length > 0) {
             const user = checkUser.recordset[0];
-
-            //User exists but is a GUEST (No password) -> update entry in db
             if (user.password_hash === null) {
                 await pool.request()
                     .input('id', sql.Int, user.id)
@@ -60,13 +56,10 @@ app.post('/register', async (req, res) => {
                         WHERE id = @id
                     `);
                 return res.status(200).json({ message: 'Account registered successfully! (Guest account upgraded)' });
-            } 
-            
-            //already exists
+            }
             return res.status(409).json({ message: 'User already exists!' });
         }
 
-        //new user
         await pool.request()
             .input('first', sql.NVarChar, name)
             .input('middle', sql.NVarChar, middleName)
@@ -88,27 +81,22 @@ app.post('/register', async (req, res) => {
     }
 });
 
-
-//guesst req
+// Guest requests
 app.post('/submit-request', async (req, res) => {
-
     const { name, middleName, surname, pesel, phone, email, requestType, subcategory, description } = req.body;
 
     try {
         const pool = await sql.connect(dbConfig);
         let userId;
 
-        //check if exists
         const userCheck = await pool.request()
             .input('email', sql.NVarChar, email)
             .input('pesel', sql.NVarChar, pesel)
             .query('SELECT id FROM users WHERE email = @email OR pesel = @pesel');
 
         if (userCheck.recordset.length > 0) {
-            //yes
             userId = userCheck.recordset[0].id;
         } else {
-
             const newUser = await pool.request()
                 .input('first', sql.NVarChar, name)
                 .input('middle', sql.NVarChar, middleName)
@@ -135,10 +123,10 @@ app.post('/submit-request', async (req, res) => {
                 VALUES (@uid, @type, @sub, @desc)
             `);
 
-        res.status(201).json({ 
-            success: true, 
+        res.status(201).json({
+            success: true,
             message: 'Request submitted successfully!',
-            requestId: `REQ-${result.recordset[0].request_id}` 
+            requestId: `REQ-${result.recordset[0].request_id}`
         });
 
     } catch (err) {
@@ -147,119 +135,48 @@ app.post('/submit-request', async (req, res) => {
     }
 });
 
+// ----------------- LOGIN SIMULATION -----------------
+const loginAttempts = new Map();
 
 app.post('/login', async (req, res) => {
     const { userId, password } = req.body;
 
+    // 1. Check lock in-memory
+    const attempts = loginAttempts.get(userId) || 0;
+    if (attempts >= 5) {
+        return res.status(403).json({ success: false, message: 'Account is temporarily locked.' });
+    }
+
     try {
         const pool = await sql.connect(dbConfig);
-        
-        //find by email
         const result = await pool.request()
             .input('email', sql.NVarChar, userId)
             .query('SELECT * FROM users WHERE email = @email');
 
         const user = result.recordset[0];
 
-        //validate psswd
         if (!user || !user.password_hash) {
             return res.status(401).json({ success: false, message: 'Invalid email or password.' });
         }
 
         const validPass = await bcrypt.compare(password, user.password_hash);
+
         if (!validPass) {
-            return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-        }
-
-        //return data
-        res.json({
-            success: true,
-            user: {
-                first_name: user.first_name,
-                middle_name: user.middle_name,
-                last_name: user.last_name,
-                pesel: user.pesel,
-                phone_number: user.phone_number,
-                email: user.email
+            loginAttempts.set(userId, attempts + 1);
+            if (attempts + 1 >= 5) {
+                return res.status(403).json({ success: false, message: 'Account locked.' });
             }
-        });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Server error' });
-    }
-});
-
-//forgot pswd (6 digit code)
-app.post('/forgot-password', async (req, res) => {
-    const { email } = req.body;
-
-    try {
-        const pool = await sql.connect(dbConfig);
-
-        //generate 6-digit code
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-        const expiry = new Date(Date.now() + 900000);//expires in 15 minutes
-
-        //save code to db
-        await pool.request()
-            .input('code', sql.NVarChar, code)
-            .input('expiry', sql.DateTime, expiry)
-            .input('email', sql.NVarChar, email)
-            .query('UPDATE users SET reset_token = @code, reset_token_expiry = @expiry WHERE email = @email');
-
-        //return code to frontend (simulate email
-        res.json({ success: true, debugCode: code });
-
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: 'Database error' });
-    }
-});
-
-//reset psswd - verify code
-app.post('/reset-password', async (req, res) => {
-    const { email, code, newPassword } = req.body;
-
-    try {
-        const pool = await sql.connect(dbConfig);
-
-        //verify email + code + expiry
-        const check = await pool.request()
-            .input('email', sql.NVarChar, email)
-            .input('code', sql.NVarChar, code)
-            .query(`
-                SELECT id FROM users 
-                WHERE email = @email 
-                AND reset_token = @code 
-                AND reset_token_expiry > GETDATE()
-            `);
-
-        if (check.recordset.length === 0) {
-            return res.status(400).json({ success: false, message: 'Invalid or expired code.' });
+            return res.status(401).json({ success: false, message: 'Invalid password.' });
         }
 
-        //hash new psswd
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(newPassword, salt);
-
-        //update psswd & clear code
-        await pool.request()
-            .input('pass', sql.NVarChar, passwordHash)
-            .input('email', sql.NVarChar, email)
-            .query(`
-                UPDATE users 
-                SET password_hash = @pass, reset_token = NULL, reset_token_expiry = NULL 
-                WHERE email = @email
-            `);
-
-        res.json({ success: true, message: 'Password reset successfully!' });
+        // success: reset attempts
+        loginAttempts.delete(userId);
+        res.json({ success: true, user: user });
 
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
-
 
 app.listen(3000, () => console.log('Server running on port 3000'));
